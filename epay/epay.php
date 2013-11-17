@@ -14,7 +14,7 @@ class EPAY extends PaymentModule
 	{
 		$this->name = 'epay';
 		$this->version = 4.6;
-		$this->author = "ePay Payment Solutions";
+		$this->author = "ePay Payment Solutions / Modded by 1337 ApS";
 		$this->module_key = "33db444abbb39b2a7c74d8b7da806a66";
 		
 		/* Payment modules placed in:
@@ -174,8 +174,23 @@ class EPAY extends PaymentModule
 			
 			if(!sizeof($this->_postErrors))
 			{
+				$cssurl = $_POST["cssurl"];
+				if(empty($cssurl)){
+					$cssurl = _PS_BASE_URL_ . '/modules/epay/epay.css';
+				}
+				
+				$iframe_height = $_POST['iframe_height'];
+				$iframe_width = $_POST['iframe_width'];
+				if(empty($iframe_height))
+					$iframe_height = 350;
+				if(empty($iframe_width))
+					$iframe_width = 350;
+				
 				Configuration::updateValue('EPAY_MERCHANTNUMBER', $_POST["merchantnumber"]);
 				Configuration::updateValue('EPAY_INTEGRATION', $_POST["integration"]);
+				Configuration::updateValue('EPAY_CSSURL', $cssurl);
+				Configuration::updateValue('EPAY_IFRAME_HEIGHT', $iframe_height);
+				Configuration::updateValue('EPAY_IFRAME_WIDTH', $iframe_width);
 				Configuration::updateValue('EPAY_WINDOWID', $_POST["windowid"]);
 				Configuration::updateValue('EPAY_ENABLE_REMOTE_API', $_POST["remote_api"]);
 				Configuration::updateValue('EPAY_INSTANTCAPTURE', $_POST["instantcapture"]);
@@ -225,6 +240,9 @@ class EPAY extends PaymentModule
 	{
 		$merchantnumber = Configuration::get('EPAY_MERCHANTNUMBER');
 		$integration = Configuration::get('EPAY_INTEGRATION');
+		$cssurl = Configuration::get('EPAY_CSSURL');
+		$iframe_height = Configuration::get('EPAY_IFRAME_HEIGHT');
+		$iframe_width = Configuration::get('EPAY_IFRAME_WIDTH');
 		$windowid = Configuration::get('EPAY_WINDOWID');
 		$remote_api = Configuration::get('EPAY_ENABLE_REMOTE_API');
 		$remote_api_password = Configuration::get('EPAY_REMOTE_API_PASSWORD');
@@ -261,7 +279,30 @@ class EPAY extends PaymentModule
 				<td>
 				  	<div class="">
 						<input type="radio" name="integration" value="1" ' . ($integration == "1" ? 'checked="checked"' : '') . ' /> ' . $this->l('Overlay') . '<br />
+						<input type="radio" name="integration" value="2" ' . ($integration == "2" ? 'checked="checked"' : '') . ' /> ' . $this->l('iFrame') . '<br />
 						<input type="radio" name="integration" value="3" ' . ($integration == "3" ? 'checked="checked"' : '') . ' /> ' . $this->l('Full screen') . '<br />
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>' . $this->l('CSS Url:') . '</b><br />
+					' . $this->l('Customize the iFrame payment window integration') . '
+				</td>
+				<td>
+				  <div class="">
+						<div class=""><input type="text" size="33" name="cssurl" value="' . $cssurl . '" /></div>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<b>' . $this->l('iFrame Size:') . '</b><br />
+					' . $this->l('Set custom iFrame size (Height x Width)') . '
+				</td>
+				<td>
+				  <div class="">
+						<div class=""><input type="text" size="5" name="iframe_height" placeholder="Height" value="' . $iframe_height . '" /> x <input type="text" placeholder="Width" size="5" name="iframe_width" value="' . $iframe_width . '" /></div>
 					</div>
 				</td>
 			</tr>
@@ -455,7 +496,7 @@ class EPAY extends PaymentModule
 			$invoice["lines"][] = array
 			(
 				"id" => ($product["reference"] == "" ? $product["id_product"] : $product["reference"]),
-				"description" => addslashes($product["name"] . ($product["attributes_small"] ? (" " . $product["attributes_small"]) : "")),
+				"description" => addslashes($product["name"] . (isset($product["attributes_small"]) ? (" " . $product["attributes_small"]) : "")),
 				"quantity" => intval((string)$product["cart_quantity"]),
 				"price" => round((string)$product["price"],2)*100,
 				"vat" => (float)round((string)((round($product["price_wt"],2)-round($product["price"],2))/round((string)$product["price"],2))*100, 2)
@@ -500,6 +541,9 @@ class EPAY extends PaymentModule
 		$merchantnumber = Configuration::get('EPAY_MERCHANTNUMBER');
 		$cms = 'prestashop' . $this->version;
 		$integration = Configuration::get('EPAY_INTEGRATION');
+		$cssurl = ($integration == 2 ? Configuration::get('EPAY_CSSURL') : "");
+		$iframe_height = ($integration == 2 ? Configuration::get('EPAY_IFRAME_HEIGHT') : "");
+		$iframe_width = ($integration == 2 ? Configuration::get('EPAY_IFRAME_WIDTH') : "");
 		$windowid = Configuration::get('EPAY_WINDOWID');
 		$instantcapture = Configuration::get('EPAY_INSTANTCAPTURE');
 		$group = Configuration::get('EPAY_GROUP');
@@ -539,6 +583,7 @@ class EPAY extends PaymentModule
 						$cms . 
 						$merchantnumber . 
 						$integration . 
+						$cssurl .
 						$windowid . 
 						$total . 
 						$group . 
@@ -553,6 +598,8 @@ class EPAY extends PaymentModule
 						$accepturl .
 						$language .
 						(Configuration::get('EPAY_GOOGLE_PAGEVIEW') ? Configuration::get('GANALYTICS_ID') : "") .
+						$iframe_height . 
+						$iframe_width . 
 						"1" . //instant callback
 						($enableinvoice == 1 ? stripslashes($this->jsonRemoveUnicodeSequences($invoice)) : "") .
 						Configuration::get('EPAY_MD5KEY'));
@@ -564,6 +611,9 @@ class EPAY extends PaymentModule
 			'customer' => $customer,
 			'windowid' => $windowid,
 			'integration' => $integration,
+			'cssurl' => $cssurl,
+			'iframe_height' => $iframe_height,
+			'iframe_width' => $iframe_width,
 			'merchantnumber' => $merchantnumber,
 			'accepturl' => $accepturl,
 			'declineurl_stdwindow' => $declineurl_stdwindow,

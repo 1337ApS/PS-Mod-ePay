@@ -51,8 +51,7 @@ $cart = new Cart(intval($id_cart));
 if ($cart->OrderExists() == 0){
 	$message = "\nPayment via ePay\nePay transaction ID: " . $_GET["txnid"];
 	
-	if ((version_compare(_PS_VERSION_, "1.4.0.0", ">=") and $epay->validateOrder($_GET["orderid"], _PS_OS_PAYMENT_, $amount, $epay->displayName, $message, array(), NULL, false, $cart->secure_key)) or ($epay->validateOrder($_GET["orderid"], _PS_OS_PAYMENT_, $amount, $epay->displayName, $message)))
-	{
+	if ((version_compare(_PS_VERSION_, "1.4.0.0", ">=") and $epay->validateOrder($_GET["orderid"], _PS_OS_PAYMENT_, $amount, $epay->displayName, $message, array(), NULL, false, $cart->secure_key)) or ($epay->validateOrder($_GET["orderid"], _PS_OS_PAYMENT_, $amount, $epay->displayName, $message))){
 		$epay->recordTransaction(null, $id_cart, $_GET["txnid"], $cardid, $cardnopostfix, $currency, $_GET["amount"], $transfee, $fraud);
 		
 		$order = new Order($epay->currentOrder);
@@ -61,12 +60,10 @@ if ($cart->OrderExists() == 0){
 		$payment[0]->transaction_id = $_GET["txnid"];
 		$payment[0]->amount = $amount;
 		
-		if($transfee > 0)
-		{
+		if($transfee > 0){
 			$payment[0]->amount = $payment[0]->amount + number_format($transfee / 100, 2, ".", "");
 
-			if(Configuration::get('EPAY_ADDFEETOSHIPPING'))
-			{
+			if(Configuration::get('EPAY_ADDFEETOSHIPPING'))	{
 				$order->total_paid = $order->total_paid + number_format($transfee / 100, 2, ".", "");
 				$order->total_paid_tax_incl = $order->total_paid_tax_incl + number_format($transfee / 100, 2, ".", "");
 				$order->total_paid_tax_excl = $order->total_paid_tax_excl + number_format($transfee / 100, 2, ".", "");
@@ -91,19 +88,13 @@ if ($cart->OrderExists() == 0){
 		$okpage = $page_redirect . 'order-confirmation.php?id_cart=' . $id_cart . '&id_module=' . $epay->id . '&id_order=' . $epay->currentOrder . '&key=' . $order->secure_key;
 		
 		header('Location: '. $okpage);
-	}
-	else
-	{
+	} else {
 		echo "Prestashop error - unable to process order..";
 	}
-}
-else
-{
+} else {
 	$order_id = Order::getOrderByCartId($id_cart);
 	$order = new Order($order_id);
 	$okpage = $page_redirect . 'order-confirmation.php?id_cart=' . $id_cart . '&id_module=' . $epay->id . '&id_order=' . $order_id . '&key=' . $order->secure_key;
 
 	header('Location: ' . $okpage);
 }
-	
-?>
