@@ -113,10 +113,10 @@ class EpaySoap extends PaymentModule{
 		$epay_params = array();
 		$epay_params['merchantnumber'] = $marchantnumber;
 		$epay_params['transactionid'] = $transactionid;
+		$epay_params['pwd'] = strval(Configuration::get('EPAY_REMOTE_API_PASSWORD'));
 		$epay_params["epayresponse"] = "-1";
 		
 		$result = $this->_soapcall()->gettransaction($epay_params);
-		
 		if ($result->gettransactionResult == true)
 			return $result->transactionInformation;
 		else
