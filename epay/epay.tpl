@@ -36,6 +36,7 @@
 			{/if}
 			{literal}
 			'instantcallback': "1",
+			'mobile': "0",
 			{/literal}
 			{if $enableinvoice == 1}
 				{literal}

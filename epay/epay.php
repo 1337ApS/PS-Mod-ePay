@@ -601,6 +601,7 @@ class EPAY extends PaymentModule
 						$iframe_height . 
 						$iframe_width . 
 						"1" . //instant callback
+						"0" . //disable mobile redirection
 						($enableinvoice == 1 ? stripslashes($this->jsonRemoveUnicodeSequences($invoice)) : "") .
 						Configuration::get('EPAY_MD5KEY'));
 		
